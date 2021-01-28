@@ -1,0 +1,51 @@
+
+stages:
+  - package
+  - deploy
+
+include:
+  - project: 'devops/containers/kaniko-docker-build'
+    ref: v1.0.2
+    file: '/.build_with_kaniko.yml'
+
+######################## TEMPLATES ######################
+.build-docker-image:
+  
+  extends: .build_with_kaniko
+  except:
+    refs:
+      - tags
+      - master
+
+.push-docker-image:
+  extends: .build_with_kaniko
+  only:
+    refs:
+      - tags
+      - master
+
+######################## JOBS ########################
+build-docker:
+  stage: package
+  extends: .build-docker-image
+  variables:
+    KANIKO_EXECUTOR_EXTRA_OPTS: "--no-push"
+  cache:
+    key: $CI_PIPELINE_ID
+    paths:
+    - .m2/repository
+    - target
+    policy: pull
+
+push-docker:
+  stage: deploy
+  extends: .push-docker-image
+  variables:
+    KANIKO_EXECUTOR_EXTRA_OPTS: ""
+  cache:
+    key: $CI_PIPELINE_ID
+    paths:
+    - .m2/repository
+    - target
+    policy: pull
+
