@@ -1,5 +1,6 @@
 
 stages:
+  - mirror
   - package
   - deploy
 
@@ -16,6 +17,7 @@ include:
     refs:
       - tags
       - master
+      - schedules
 
 .push-docker-image:
   extends: .build_with_kaniko
@@ -23,8 +25,32 @@ include:
     refs:
       - tags
       - master
+  except:
+    refs:
+      - schedules
 
 ######################## JOBS ########################
+#MIRRORING
+git-mirror-upstream_master:
+  stage: mirror
+  only:
+    - schedules
+  variables:
+    GIT_STRATEGY: clone
+    GIT_CHECKOUT: "false"
+    UPSTREAM_REPO: "https://github.com/devshawn/kafka-gitops.git"
+  script:
+    - git remote rm upstream || true
+    - git config user.email "${GITLAB_USER_EMAIL}"
+    - git config user.name "${GITLAB_USER_NAME}"
+    - git remote remove origin
+    - git remote add origin git@sources.devtools.local:${CI_PROJECT_PATH}.git
+    - git remote add upstream ${UPSTREAM_REPO}
+    - git fetch --all
+    - git checkout upstream_master || git checkout -b upstream_master upstream/master
+    - git merge upstream/master --ff
+    - git push origin HEAD:upstream_master
+
 build-docker:
   stage: package
   extends: .build-docker-image
