@@ -13,6 +13,7 @@ import com.devshawn.kafka.gitops.domain.state.DesiredState;
 import com.devshawn.kafka.gitops.domain.state.DesiredStateFile;
 import com.devshawn.kafka.gitops.domain.state.TopicDetails;
 import com.devshawn.kafka.gitops.domain.state.service.KafkaStreamsService;
+import com.devshawn.kafka.gitops.enums.SchemaType;
 import com.devshawn.kafka.gitops.exception.ConfluentCloudException;
 import com.devshawn.kafka.gitops.exception.InvalidAclDefinitionException;
 import com.devshawn.kafka.gitops.exception.MissingConfigurationException;
@@ -33,16 +34,11 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import io.confluent.kafka.schemaregistry.ParsedSchema;
-import io.confluent.kafka.schemaregistry.SchemaProvider;
-import io.confluent.kafka.schemaregistry.avro.AvroSchemaProvider;
-import io.confluent.kafka.schemaregistry.client.rest.entities.SchemaReference;
 import org.slf4j.LoggerFactory;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -51,8 +47,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class StateManager {
-
-    private static org.slf4j.Logger log = LoggerFactory.getLogger(StateManager.class);
 
     private final ManagerConfig managerConfig;
     private final ObjectMapper objectMapper;
@@ -345,39 +339,15 @@ public class StateManager {
         if (!desiredStateFile.getSchemas().isEmpty()) {
             SchemaRegistryConfig schemaRegistryConfig = SchemaRegistryConfigLoader.load();
             desiredStateFile.getSchemas().forEach((s, schemaDetails) -> {
-                if (!schemaDetails.getType().equalsIgnoreCase("Avro")) {
+                if (!schemaDetails.getType().equalsIgnoreCase(SchemaType.AVRO.toString()) ||
+                    !schemaDetails.getType().equalsIgnoreCase(SchemaType.JSON.toString()) ||
+                    !schemaDetails.getType().equalsIgnoreCase(SchemaType.PROTOBUF.toString())) {
                     throw new ValidationException(String.format("Schema type %s is currently not supported.", schemaDetails.getType()));
                 }
                 if (!Files.exists(Paths.get(schemaRegistryConfig.getConfig().get("SCHEMA_DIRECTORY") + "/" + schemaDetails.getFile()))) {
                     throw new ValidationException(String.format("Schema file %s not found in schema directory at %s", schemaDetails.getFile(), schemaRegistryConfig.getConfig().get("SCHEMA_DIRECTORY")));
                 }
-                if (schemaDetails.getType().equalsIgnoreCase("Avro")) {
-                    AvroSchemaProvider avroSchemaProvider = new AvroSchemaProvider();
-                    if (schemaDetails.getReferences().isEmpty() && schemaDetails.getType().equalsIgnoreCase("Avro")) {
-                        Optional<ParsedSchema> parsedSchema = avroSchemaProvider.parseSchema(schemaRegistryService.loadSchemaFromDisk(schemaDetails.getFile()), Collections.emptyList());
-                        if (!parsedSchema.isPresent()) {
-                            throw new ValidationException(String.format("Avro schema %s could not be parsed.", schemaDetails.getFile()));
-                        }
-                    } else {
-                        List<SchemaReference> schemaReferences = new ArrayList<>();
-                        schemaDetails.getReferences().forEach(referenceDetails -> {
-                            SchemaReference schemaReference = new SchemaReference(referenceDetails.getName(), referenceDetails.getSubject(), referenceDetails.getVersion());
-                            schemaReferences.add(schemaReference);
-                        });
-                        // we need to pass a schema registry client as a config because the underlying code validates against the current state
-                        avroSchemaProvider.configure(Collections.singletonMap(SchemaProvider.SCHEMA_VERSION_FETCHER_CONFIG, schemaRegistryService.createSchemaRegistryClient()));
-                        try {
-                            Optional<ParsedSchema> parsedSchema = avroSchemaProvider.parseSchema(schemaRegistryService.loadSchemaFromDisk(schemaDetails.getFile()), schemaReferences);
-                            if (!parsedSchema.isPresent()) {
-                                throw new ValidationException(String.format("Avro schema %s could not be parsed.", schemaDetails.getFile()));
-                            }
-                        } catch (IllegalStateException ex) {
-                            throw new ValidationException(String.format("Reference validation error: %s", ex.getMessage()));
-                        } catch (RuntimeException ex) {
-                            throw new ValidationException(String.format("Error thrown when attempting to validate schema with reference", ex.getMessage()));
-                        }
-                    }
-                }
+                schemaRegistryService.validateSchema(schemaDetails);
             });
         }
     }

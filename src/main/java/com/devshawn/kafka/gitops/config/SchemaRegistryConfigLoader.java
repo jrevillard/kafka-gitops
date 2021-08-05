@@ -12,6 +12,8 @@ public class SchemaRegistryConfigLoader {
 
     private static org.slf4j.Logger log = LoggerFactory.getLogger(SchemaRegistryConfigLoader.class);
 
+    private SchemaRegistryConfigLoader() {}
+
     public static SchemaRegistryConfig load() {
         SchemaRegistryConfig.Builder builder = new SchemaRegistryConfig.Builder();
         setConfig(builder);
@@ -68,7 +70,7 @@ public class SchemaRegistryConfigLoader {
             throw new MissingConfigurationException("SCHEMA_REGISTRY_SASL_JAAS_USERNAME");
         } else if (password.get() != null) {
             throw new MissingConfigurationException("SCHEMA_REGISTRY_SASL_JAAS_PASSWORD");
-        } else if (username.get() == null & password.get() == null) {
+        } else if (username.get() == null && password.get() == null) {
             throw new MissingMultipleConfigurationException("SCHEMA_REGISTRY_SASL_JAAS_PASSWORD", "SCHEMA_REGISTRY_SASL_JAAS_USERNAME");
         }
     }

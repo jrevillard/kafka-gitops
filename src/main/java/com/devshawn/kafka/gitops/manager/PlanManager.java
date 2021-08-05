@@ -239,15 +239,15 @@ public class PlanManager {
                     .setSchemaDetails(schemaDetails);
 
             if (!currentSubjectSchemasMap.containsKey(subject)) {
-                log.info("[PLAN] Schema Subject {} does not exist; it will be created.", subject);
+                log.info("[PLAN] Schema Subject '{}' does not exist; it will be created.", subject);
                 schemaPlan.setAction(PlanAction.ADD);
             } else {
                 String diff = schemaRegistryService.compareSchemasAndReturnDiff(schemaRegistryService.loadSchemaFromDisk(schemaDetails.getFile()), currentSubjectSchemasMap.get(subject).getSchema());
                 if (diff == null) {
-                    log.info("[PLAN] Schema Subject {} exists and has not changed; it will not be created.", subject);
+                    log.info("[PLAN] Schema Subject '{}' exists and has not changed; it will not be created.", subject);
                     schemaPlan.setAction(PlanAction.NO_CHANGE);
                 } else {
-                    log.info("[PLAN] Schema Subject {} exists and has changed; it will be updated.", subject);
+                    log.info("[PLAN] Schema Subject '{}' exists and has changed; it will be updated.", subject);
                     schemaPlan.setAction(PlanAction.UPDATE);
                     // TODO: Set diff string for logging?
                 }

@@ -64,6 +64,8 @@ public class LogUtil {
                 System.out.println(red(String.format("- [TOPIC] %s", topicPlan.getName())));
                 System.out.println("\n");
                 break;
+            case NO_CHANGE:
+                break;
         }
     }
 
@@ -117,7 +119,7 @@ public class LogUtil {
                 System.out.println(red(String.format("\t\t- %s (%s)", topicConfigPlan.getKey(), topicConfigPlan.getPreviousValue().get())));
                 break;
             case NO_CHANGE:
-              break;
+                break;
         }
     }
 
@@ -147,6 +149,9 @@ public class LogUtil {
                 System.out.println(red(String.format("\t - permission: %s", aclDetails.getPermission())));
                 System.out.println("\n");
                 break;
+            case UPDATE:
+            case NO_CHANGE:
+                break;
         }
     }
 
@@ -173,6 +178,8 @@ public class LogUtil {
             case REMOVE:
                 System.out.println(red(String.format("- [SCHEMA] %s", schemaPlan.getName())));
                 System.out.println("\n");
+                break;
+            case NO_CHANGE:
                 break;
         }
     }
