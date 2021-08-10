@@ -14,3 +14,4 @@ plan.json
 test.py
 /generated/
 /.apt_generated/
+/.apt_generated_tests/
