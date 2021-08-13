@@ -1,5 +1,14 @@
 package com.devshawn.kafka.gitops.manager;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import org.apache.kafka.clients.admin.AlterConfigOp;
+import org.apache.kafka.clients.admin.ConfigEntry;
+import org.apache.kafka.common.Node;
+import org.apache.kafka.common.config.ConfigResource;
 import com.devshawn.kafka.gitops.config.ManagerConfig;
 import com.devshawn.kafka.gitops.domain.plan.DesiredPlan;
 import com.devshawn.kafka.gitops.domain.plan.TopicConfigPlan;
@@ -7,22 +16,19 @@ import com.devshawn.kafka.gitops.domain.plan.TopicDetailsPlan;
 import com.devshawn.kafka.gitops.domain.plan.TopicPlan;
 import com.devshawn.kafka.gitops.enums.PlanAction;
 import com.devshawn.kafka.gitops.service.KafkaService;
+import com.devshawn.kafka.gitops.service.SchemaRegistryService;
 import com.devshawn.kafka.gitops.util.LogUtil;
-import org.apache.kafka.clients.admin.AlterConfigOp;
-import org.apache.kafka.clients.admin.ConfigEntry;
-import org.apache.kafka.common.Node;
-import org.apache.kafka.common.config.ConfigResource;
-
-import java.util.*;
 
 public class ApplyManager {
 
     private final ManagerConfig managerConfig;
     private final KafkaService kafkaService;
+    private final SchemaRegistryService schemaRegistryService;
 
-    public ApplyManager(ManagerConfig managerConfig, KafkaService kafkaService) {
+    public ApplyManager(ManagerConfig managerConfig, KafkaService kafkaService, SchemaRegistryService schemaRegistryService) {
         this.managerConfig = managerConfig;
         this.kafkaService = kafkaService;
+        this.schemaRegistryService = schemaRegistryService;
     }
 
     public void applyTopics(DesiredPlan desiredPlan) {
@@ -85,6 +91,21 @@ public class ApplyManager {
             } else if (aclPlan.getAction() == PlanAction.REMOVE && !managerConfig.isDeleteDisabled()) {
                 LogUtil.printAclPreApply(aclPlan);
                 kafkaService.deleteAcl(aclPlan.getAclDetails().toAclBinding());
+                LogUtil.printPostApply();
+            }
+        });
+    }
+
+    public void applySchemas(DesiredPlan desiredPlan) {
+        desiredPlan.getSchemaPlans().forEach(schemaPlan -> {
+            if (schemaPlan.getAction() == PlanAction.ADD) {
+                LogUtil.printSchemaPreApply(schemaPlan);
+                schemaRegistryService.register(schemaPlan);
+                LogUtil.printPostApply();
+            } else if (schemaPlan.getAction() == PlanAction.UPDATE ||
+                  (schemaPlan.getAction() == PlanAction.REMOVE && !managerConfig.isDeleteDisabled())) {
+                LogUtil.printSchemaPreApply(schemaPlan);
+                schemaRegistryService.deleteSubject(schemaPlan.getName(), true);
                 LogUtil.printPostApply();
             }
         });
