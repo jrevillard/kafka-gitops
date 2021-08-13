@@ -196,16 +196,16 @@ class TestUtils {
     }
 
     static CachedSchemaRegistryClient getSchemaRegistryClient() {
-          Map<String, Object> config = SchemaRegistryConfigLoader.load().getConfig();
-          RestService restService = new RestService(config.get(SchemaRegistryConfigLoader.SCHEMA_REGISTRY_URL_KEY).toString())
-          if(config.get(SchemaRegistryConfigLoader.SCHEMA_REGISTRY_SASL_CONFIG_KEY) != null) {
-              SaslBasicAuthCredentialProvider saslBasicAuthCredentialProvider = new SaslBasicAuthCredentialProvider()
-              Map<String, Object> clientConfig = new HashMap<>()
-              clientConfig.put(SaslConfigs.SASL_JAAS_CONFIG, config
-                  .get(SchemaRegistryConfigLoader.SCHEMA_REGISTRY_SASL_CONFIG_KEY).toString())
-              saslBasicAuthCredentialProvider.configure(clientConfig)
-              restService.setBasicAuthCredentialProvider(saslBasicAuthCredentialProvider)
-          }
+        Map<String, Object> config = SchemaRegistryConfigLoader.load().getConfig();
+        RestService restService = new RestService(config.get(SchemaRegistryConfigLoader.SCHEMA_REGISTRY_URL_KEY).toString())
+        if(config.get(SchemaRegistryConfigLoader.SCHEMA_REGISTRY_SASL_CONFIG_KEY) != null) {
+            SaslBasicAuthCredentialProvider saslBasicAuthCredentialProvider = new SaslBasicAuthCredentialProvider()
+            Map<String, Object> clientConfig = new HashMap<>()
+            clientConfig.put(SaslConfigs.SASL_JAAS_CONFIG, config
+                .get(SchemaRegistryConfigLoader.SCHEMA_REGISTRY_SASL_CONFIG_KEY).toString())
+            saslBasicAuthCredentialProvider.configure(clientConfig)
+            restService.setBasicAuthCredentialProvider(saslBasicAuthCredentialProvider)
+        }
         return  new CachedSchemaRegistryClient(restService, 10);
     }
 }
