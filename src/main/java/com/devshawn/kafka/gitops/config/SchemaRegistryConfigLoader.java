@@ -40,7 +40,10 @@ public class SchemaRegistryConfigLoader {
                 config.put(SCHEMA_REGISTRY_URL_KEY, value);
             } else if (key.equals(SCHEMA_DIRECTORY_KEY)) {
                 config.put(SCHEMA_DIRECTORY_KEY, value);
-            }
+            } else if (key.startsWith("SCHEMA_REGISTRY_")) {
+                String newKey = key.substring("SCHEMA_REGISTRY_".length()).replace("_", ".").toLowerCase();
+                config.put(newKey, value);
+          }
         });
 
         handleDefaultConfig(config);

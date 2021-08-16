@@ -190,7 +190,7 @@ public class SchemaRegistryService {
             saslBasicAuthCredentialProvider.configure(clientConfig);
             restService.setBasicAuthCredentialProvider(saslBasicAuthCredentialProvider);
         }
-        return new CachedSchemaRegistryClient(restService, 10);
+        return new CachedSchemaRegistryClient(restService, 10, config.getConfig());
     }
 
 }
