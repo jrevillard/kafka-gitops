@@ -3,11 +3,9 @@ package com.devshawn.kafka.gitops.service;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import org.apache.kafka.common.config.SaslConfigs;
 import com.devshawn.kafka.gitops.config.SchemaRegistryConfig;
 import com.devshawn.kafka.gitops.config.SchemaRegistryConfigLoader;
 import com.devshawn.kafka.gitops.domain.plan.SchemaPlan;
@@ -25,7 +23,6 @@ import io.confluent.kafka.schemaregistry.client.SchemaMetadata;
 import io.confluent.kafka.schemaregistry.client.rest.RestService;
 import io.confluent.kafka.schemaregistry.client.rest.entities.SchemaReference;
 import io.confluent.kafka.schemaregistry.client.rest.exceptions.RestClientException;
-import io.confluent.kafka.schemaregistry.client.security.basicauth.SaslBasicAuthCredentialProvider;
 import io.confluent.kafka.schemaregistry.json.JsonSchemaProvider;
 import io.confluent.kafka.schemaregistry.protobuf.ProtobufSchemaProvider;
 
@@ -182,14 +179,6 @@ public class SchemaRegistryService {
 
     public CachedSchemaRegistryClient createSchemaRegistryClient() {
         RestService restService = new RestService(config.getConfig().get(SchemaRegistryConfigLoader.SCHEMA_REGISTRY_URL_KEY).toString());
-        if(config.getConfig().get(SchemaRegistryConfigLoader.SCHEMA_REGISTRY_SASL_CONFIG_KEY) != null) {
-            SaslBasicAuthCredentialProvider saslBasicAuthCredentialProvider = new SaslBasicAuthCredentialProvider();
-            Map<String, Object> clientConfig = new HashMap<>();
-            clientConfig.put(SaslConfigs.SASL_JAAS_CONFIG, config.getConfig()
-                .get(SchemaRegistryConfigLoader.SCHEMA_REGISTRY_SASL_CONFIG_KEY).toString());
-            saslBasicAuthCredentialProvider.configure(clientConfig);
-            restService.setBasicAuthCredentialProvider(saslBasicAuthCredentialProvider);
-        }
         return new CachedSchemaRegistryClient(restService, 10, config.getConfig());
     }
 
