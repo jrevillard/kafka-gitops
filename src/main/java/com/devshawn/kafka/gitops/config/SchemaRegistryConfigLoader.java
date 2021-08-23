@@ -1,10 +1,8 @@
 package com.devshawn.kafka.gitops.config;
 
-import org.slf4j.LoggerFactory;
-
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
+import org.slf4j.LoggerFactory;
 
 public class SchemaRegistryConfigLoader {
 
@@ -45,12 +43,7 @@ public class SchemaRegistryConfigLoader {
     }
 
     private static void handleDefaultConfig(Map<String, Object> config) {
-        final String DEFAULT_URL = "http://localhost:8081";
         final String CURRENT_WORKING_DIR = System.getProperty("user.dir");
-        if (!config.containsKey(SCHEMA_REGISTRY_URL_KEY)) {
-            log.info("{} not set.  Using default value of {}", SCHEMA_REGISTRY_URL_KEY, DEFAULT_URL);
-            config.put(SCHEMA_REGISTRY_URL_KEY, DEFAULT_URL);
-        }
         if (!config.containsKey(SCHEMA_DIRECTORY_KEY)) {
             log.info("{} not set. Defaulting to current working directory: {}", SCHEMA_DIRECTORY_KEY, CURRENT_WORKING_DIR);
             config.put(SCHEMA_DIRECTORY_KEY, CURRENT_WORKING_DIR);

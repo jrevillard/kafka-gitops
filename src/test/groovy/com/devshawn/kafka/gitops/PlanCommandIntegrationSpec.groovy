@@ -105,6 +105,7 @@ class PlanCommandIntegrationSpec extends Specification {
 
     void 'test various valid plans with seed - #planName'() {
         setup:
+        TestUtils.cleanUpKafkaCluster()
         TestUtils.seedKafkaCluster()
         String planOutputFile = "/tmp/plan.json"
         String file = TestUtils.getResourceFilePath("plans/${planName}.yaml")
@@ -144,6 +145,7 @@ class PlanCommandIntegrationSpec extends Specification {
 
     void 'test include unchanged flag - #planNam #includeUnchanged'() {
         setup:
+        TestUtils.cleanUpKafkaCluster()
         TestUtils.seedKafkaCluster()
         String planOutputFile = "/tmp/plan.json"
         String file = TestUtils.getResourceFilePath("plans/${planName}.yaml")
@@ -260,6 +262,7 @@ class PlanCommandIntegrationSpec extends Specification {
 
     void 'test plan that has no changes - #includeUnchanged'() {
         setup:
+        TestUtils.cleanUpKafkaCluster()
         TestUtils.seedKafkaCluster()
         ByteArrayOutputStream out = new ByteArrayOutputStream()
         PrintStream oldOut = System.out

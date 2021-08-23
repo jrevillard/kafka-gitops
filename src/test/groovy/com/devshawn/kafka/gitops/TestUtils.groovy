@@ -4,7 +4,12 @@ import java.nio.file.Paths
 import org.apache.kafka.clients.CommonClientConfigs
 import org.apache.kafka.clients.admin.AdminClient
 import org.apache.kafka.clients.admin.NewTopic
-import org.apache.kafka.common.acl.*
+import org.apache.kafka.common.acl.AccessControlEntry;
+import org.apache.kafka.common.acl.AccessControlEntryFilter;
+import org.apache.kafka.common.acl.AclBinding;
+import org.apache.kafka.common.acl.AclBindingFilter;
+import org.apache.kafka.common.acl.AclOperation;
+import org.apache.kafka.common.acl.AclPermissionType;
 import org.apache.kafka.common.config.SaslConfigs
 import org.apache.kafka.common.resource.PatternType
 import org.apache.kafka.common.resource.ResourcePattern
@@ -13,19 +18,12 @@ import org.apache.kafka.common.resource.ResourceType
 import com.devshawn.kafka.gitops.config.SchemaRegistryConfigLoader
 import com.devshawn.kafka.gitops.enums.SchemaCompatibility
 import com.devshawn.kafka.gitops.enums.SchemaType
-import com.devshawn.kafka.gitops.exception.ValidationException
 import com.devshawn.kafka.gitops.service.SchemaRegistryService
-import groovy.swing.factory.CollectionFactory
 import io.confluent.kafka.schemaregistry.AbstractSchemaProvider
 import io.confluent.kafka.schemaregistry.ParsedSchema
-import io.confluent.kafka.schemaregistry.SchemaProvider
-import io.confluent.kafka.schemaregistry.avro.AvroSchemaProvider
 import io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient
 import io.confluent.kafka.schemaregistry.client.SchemaRegistryClient
 import io.confluent.kafka.schemaregistry.client.rest.RestService
-import io.confluent.kafka.schemaregistry.client.security.basicauth.SaslBasicAuthCredentialProvider
-import io.confluent.kafka.schemaregistry.json.JsonSchemaProvider
-import io.confluent.kafka.schemaregistry.protobuf.ProtobufSchemaProvider
 import spock.util.concurrent.PollingConditions
 
 class TestUtils {
@@ -196,16 +194,8 @@ class TestUtils {
     }
 
     static CachedSchemaRegistryClient getSchemaRegistryClient() {
-        Map<String, Object> config = SchemaRegistryConfigLoader.load().getConfig();
-        RestService restService = new RestService(config.get(SchemaRegistryConfigLoader.SCHEMA_REGISTRY_URL_KEY).toString())
-        if(config.get(SchemaRegistryConfigLoader.SCHEMA_REGISTRY_SASL_CONFIG_KEY) != null) {
-            SaslBasicAuthCredentialProvider saslBasicAuthCredentialProvider = new SaslBasicAuthCredentialProvider()
-            Map<String, Object> clientConfig = new HashMap<>()
-            clientConfig.put(SaslConfigs.SASL_JAAS_CONFIG, config
-                .get(SchemaRegistryConfigLoader.SCHEMA_REGISTRY_SASL_CONFIG_KEY).toString())
-            saslBasicAuthCredentialProvider.configure(clientConfig)
-            restService.setBasicAuthCredentialProvider(saslBasicAuthCredentialProvider)
-        }
-        return  new CachedSchemaRegistryClient(restService, 10);
+          Map<String, Object> config = SchemaRegistryConfigLoader.load().getConfig();
+          RestService restService = new RestService(config.get(SchemaRegistryConfigLoader.SCHEMA_REGISTRY_URL_KEY).toString())
+        return  new CachedSchemaRegistryClient(restService, 10, config);
     }
 }

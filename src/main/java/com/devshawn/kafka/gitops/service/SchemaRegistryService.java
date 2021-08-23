@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import com.devshawn.kafka.gitops.config.SchemaRegistryConfig;
 import com.devshawn.kafka.gitops.config.SchemaRegistryConfigLoader;
@@ -34,8 +33,8 @@ public class SchemaRegistryService {
         this.config = config;
     }
 
-    public Map<String, Object> getConfig() {
-      return Collections.unmodifiableMap(config.getConfig());
+    public boolean isEnabled() {
+      return this.config.getConfig().containsKey(SchemaRegistryConfigLoader.SCHEMA_REGISTRY_URL_KEY);
     }
 
     public List<String> getAllSubjects() {
